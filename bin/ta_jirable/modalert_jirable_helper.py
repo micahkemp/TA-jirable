@@ -87,9 +87,27 @@ def process_event(helper, *args, **kwargs):
     summary = helper.get_param("summary")
     helper.log_info("summary={}".format(summary))
 
-    # The following example gets the events that trigger the alert
+    # JIRA forces setting customfields by customfield id instead of customfield name, so fetch the customfield info here to find our unique field id
+    customfield_ids = {}
+    for customfield in jira.fields():
+        customfield_ids[customfield['name']] = customfield['id']
+    unique_customfield_id = customfield_ids[unique_id_field_name]
+
     events = helper.get_events()
     for event in events:
-        issue = jira.create_issue(fields={'project': project, 'issuetype': {'name': issue_type}, 'summary': summary})
+        matched = False
+        # JIRA only allows CONTAINS searches against text fields, so we search for our full unique_id_value, then have to check for exact match against each found issue
+        for existing_issue in jira.search_issues('project={} and {} ~ "{}" and status!=Done and status!=Resolved'.format(project, unique_id_field_name, unique_id_value.replace('"', '\\"'))):
+            try:
+                # this is apparently how you do something like existing_issue.$unique_customfield_id
+                existing_issue_unique_id_value = getattr(existing_issue.fields, unique_customfield_id)
+                if existing_issue_unique_id_value == unique_id_value:
+                    matched = True
+            except:
+                # it's fine if the custom field doesn't exist, because we're not sure if the events that matched have the field
+                pass
+
+        if not matched:
+            issue = jira.create_issue(fields={'project': project, 'issuetype': {'name': issue_type}, 'summary': summary, unique_customfield_id: unique_id_value})
 
     return 0
