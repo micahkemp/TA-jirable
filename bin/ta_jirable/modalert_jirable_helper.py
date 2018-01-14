@@ -1,5 +1,6 @@
-
 # encoding = utf-8
+
+from jira import JIRA
 
 def process_event(helper, *args, **kwargs):
     """
@@ -57,5 +58,38 @@ def process_event(helper, *args, **kwargs):
 
     helper.log_info("Alert action jirable started.")
 
-    # TODO: Implement your alert action logic here
+    # jirable.py checks for the presence of these mandatory settings, so don't bother doing so here
+    jira_url = helper.get_global_setting("jira_url")
+    username = helper.get_global_setting("username")
+    password = helper.get_global_setting("password")
+
+    # try to connect, bail out if unable to do so
+    jira = None
+    try:
+        jira = JIRA(jira_url, basic_auth=(username, password))
+    except:
+        helper.log_info("Unable to connect to JIRA.  Check URL and authentication settings.")
+        return 1
+
+    # The following example gets the alert action parameters and prints them to the log
+    project = helper.get_param("project")
+    helper.log_info("project={}".format(project))
+
+    unique_id_field_name = helper.get_param("unique_id_field_name")
+    helper.log_info("unique_id_field_name={}".format(unique_id_field_name))
+
+    unique_id_value = helper.get_param("unique_id_value")
+    helper.log_info("unique_id_value={}".format(unique_id_value))
+
+    issue_type = helper.get_param("issue_type")
+    helper.log_info("issue_type={}".format(issue_type))
+
+    summary = helper.get_param("summary")
+    helper.log_info("summary={}".format(summary))
+
+    # The following example gets the events that trigger the alert
+    events = helper.get_events()
+    for event in events:
+        issue = jira.create_issue(fields={'project': project, 'issuetype': {'name': issue_type}, 'summary': summary})
+
     return 0
