@@ -94,12 +94,14 @@ def process_event(helper, *args, **kwargs):
 
     events = helper.get_events()
     for event in events:
-        templated_unique_id_value = Template(unique_id_value).render(**event)
-        helper.log_info("templated_unique_id_value: {}".format(templated_unique_id_value))
+        templated_project           = Template(project).render(**event)
+        templated_issue_type        = Template(issue_type).render(**event)
+        templated_summary           = Template(summary).render(**event)
+        templated_unique_id_value   = Template(unique_id_value).render(**event)
 
         matched = False
         # JIRA only allows CONTAINS searches against text fields, so we search for our full unique_id_value, then have to check for exact match against each found issue
-        for existing_issue in jira.search_issues('project={} and {} ~ "{}" and status!=Done and status!=Resolved'.format(project, unique_id_field_name, templated_unique_id_value.replace('"', '\\"'))):
+        for existing_issue in jira.search_issues('project={} and {} ~ "{}" and status!=Done and status!=Resolved'.format(templated_project, unique_id_field_name, templated_unique_id_value.replace('"', '\\"'))):
             try:
                 # this is apparently how you do something like existing_issue.$unique_customfield_id
                 existing_issue_unique_id_value = getattr(existing_issue.fields, unique_customfield_id)
@@ -110,6 +112,6 @@ def process_event(helper, *args, **kwargs):
                 pass
 
         if not matched:
-            issue = jira.create_issue(fields={'project': project, 'issuetype': {'name': issue_type}, 'summary': summary, unique_customfield_id: templated_unique_id_value})
+            issue = jira.create_issue(fields={'project': templated_project, 'issuetype': {'name': templated_issue_type}, 'summary': templated_summary, unique_customfield_id: templated_unique_id_value})
 
     return 0
