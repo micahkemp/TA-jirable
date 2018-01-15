@@ -2,6 +2,7 @@
 
 from jira import JIRA
 from mako.template import Template
+import re
 
 def process_event(helper, *args, **kwargs):
     """
@@ -64,6 +65,7 @@ def process_event(helper, *args, **kwargs):
     username = helper.get_global_setting("username")
     password = helper.get_global_setting("password")
     unique_id_field_name = helper.get_global_setting("unique_id_field_name")
+    dynamic_field_prefix = helper.get_global_setting("dynamic_field_prefix")
 
     # try to connect, bail out if unable to do so
     jira = None
@@ -112,6 +114,22 @@ def process_event(helper, *args, **kwargs):
                 pass
 
         if not matched:
-            issue = jira.create_issue(fields={'project': templated_project, 'issuetype': {'name': templated_issue_type}, 'summary': templated_summary, unique_customfield_id: templated_unique_id_value})
+            issue_fields = {
+                'project': templated_project,
+                'issuetype': {'name': templated_issue_type},
+                'summary': templated_summary,
+                unique_customfield_id: templated_unique_id_value
+            }
+
+            dynamic_field_regex = re.compile(r"^" + dynamic_field_prefix + "(?P<dynamic_field_name>.*)$")
+            for field in event:
+                match = dynamic_field_regex.match(field)
+                if match:
+                    helper.log_info("matched dynamic_field: {}".format(match.group('dynamic_field_name')))
+                    issue_fields[customfield_ids[match.group('dynamic_field_name')]] = event[field]
+                helper.log_info("{}".format(dynamic_field_regex))
+                helper.log_info("field={}".format(field))
+
+            issue = jira.create_issue(fields=issue_fields)
 
     return 0

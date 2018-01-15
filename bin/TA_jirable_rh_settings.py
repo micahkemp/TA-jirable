@@ -53,6 +53,16 @@ fields_additional_parameters = [
             max_len=8192, 
             min_len=0, 
         )
+    ), 
+    field.RestField(
+        'dynamic_field_prefix',
+        required=False,
+        encrypted=False,
+        default='jira_dynamic_field_',
+        validator=validator.String(
+            max_len=8192, 
+            min_len=0, 
+        )
     )
 ]
 model_additional_parameters = RestModel(fields_additional_parameters, name='additional_parameters')
