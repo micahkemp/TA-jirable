@@ -120,16 +120,16 @@ def process_event(helper, *args, **kwargs):
                 'summary': templated_summary,
                 unique_customfield_id: templated_unique_id_value
             }
+            issue = jira.create_issue(fields=issue_fields)
 
             dynamic_field_regex = re.compile(r"^" + dynamic_field_prefix + "(?P<dynamic_field_name>.*)$")
             for field in event:
                 match = dynamic_field_regex.match(field)
                 if match:
-                    helper.log_info("matched dynamic_field: {}".format(match.group('dynamic_field_name')))
-                    issue_fields[customfield_ids[match.group('dynamic_field_name')]] = event[field]
-                helper.log_info("{}".format(dynamic_field_regex))
-                helper.log_info("field={}".format(field))
-
-            issue = jira.create_issue(fields=issue_fields)
+                    try:
+                        issue.update(fields={customfield_ids[match.group('dynamic_field_name')]: event[field]})
+                    except:
+                        # in case a dynamic field was improperly named, etc, don't bail out, just log it
+                        helper.log_info("Unable to set field: {}".format(match.group('dynamic_field_name')))
 
     return 0
