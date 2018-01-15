@@ -27,6 +27,14 @@ class AlertActionWorkerjirable(ModularAlertBase):
         if not self.get_global_setting("password"):
             self.log_error('password is a mandatory setup parameter, but its value is None.')
             return False
+
+        if not self.get_global_setting("unique_id_field_name"):
+            self.log_error('unique_id_field_name is a mandatory setup parameter, but its value is None.')
+            return False
+
+        if not self.get_param("project"):
+            self.log_error('project is a mandatory parameter, but its value is None.')
+            return False
         return True
 
     def process_event(self, *args, **kwargs):

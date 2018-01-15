@@ -63,6 +63,7 @@ def process_event(helper, *args, **kwargs):
     jira_url = helper.get_global_setting("jira_url")
     username = helper.get_global_setting("username")
     password = helper.get_global_setting("password")
+    unique_id_field_name = helper.get_global_setting("unique_id_field_name")
 
     # try to connect, bail out if unable to do so
     jira = None
@@ -75,9 +76,6 @@ def process_event(helper, *args, **kwargs):
     # The following example gets the alert action parameters and prints them to the log
     project = helper.get_param("project")
     helper.log_info("project={}".format(project))
-
-    unique_id_field_name = helper.get_param("unique_id_field_name")
-    helper.log_info("unique_id_field_name={}".format(unique_id_field_name))
 
     unique_id_value = helper.get_param("unique_id_value")
     helper.log_info("unique_id_value={}".format(unique_id_value))
@@ -105,13 +103,13 @@ def process_event(helper, *args, **kwargs):
             try:
                 # this is apparently how you do something like existing_issue.$unique_customfield_id
                 existing_issue_unique_id_value = getattr(existing_issue.fields, unique_customfield_id)
-                if existing_issue_unique_id_value == unique_id_value:
+                if existing_issue_unique_id_value == templated_unique_id_value:
                     matched = True
             except:
                 # it's fine if the custom field doesn't exist, because we're not sure if the events that matched have the field
                 pass
 
         if not matched:
-            issue = jira.create_issue(fields={'project': project, 'issuetype': {'name': issue_type}, 'summary': summary, unique_customfield_id: unique_id_value})
+            issue = jira.create_issue(fields={'project': project, 'issuetype': {'name': issue_type}, 'summary': summary, unique_customfield_id: templated_unique_id_value})
 
     return 0

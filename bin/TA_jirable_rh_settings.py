@@ -43,6 +43,16 @@ fields_additional_parameters = [
             max_len=8192, 
             min_len=0, 
         )
+    ), 
+    field.RestField(
+        'unique_id_field_name',
+        required=True,
+        encrypted=False,
+        default='',
+        validator=validator.String(
+            max_len=8192, 
+            min_len=0, 
+        )
     )
 ]
 model_additional_parameters = RestModel(fields_additional_parameters, name='additional_parameters')
