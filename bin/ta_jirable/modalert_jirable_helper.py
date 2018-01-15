@@ -1,6 +1,7 @@
 # encoding = utf-8
 
 from jira import JIRA
+from mako.template import Template
 
 def process_event(helper, *args, **kwargs):
     """
@@ -95,9 +96,12 @@ def process_event(helper, *args, **kwargs):
 
     events = helper.get_events()
     for event in events:
+        templated_unique_id_value = Template(unique_id_value).render(**event)
+        helper.log_info("templated_unique_id_value: {}".format(templated_unique_id_value))
+
         matched = False
         # JIRA only allows CONTAINS searches against text fields, so we search for our full unique_id_value, then have to check for exact match against each found issue
-        for existing_issue in jira.search_issues('project={} and {} ~ "{}" and status!=Done and status!=Resolved'.format(project, unique_id_field_name, unique_id_value.replace('"', '\\"'))):
+        for existing_issue in jira.search_issues('project={} and {} ~ "{}" and status!=Done and status!=Resolved'.format(project, unique_id_field_name, templated_unique_id_value.replace('"', '\\"'))):
             try:
                 # this is apparently how you do something like existing_issue.$unique_customfield_id
                 existing_issue_unique_id_value = getattr(existing_issue.fields, unique_customfield_id)
