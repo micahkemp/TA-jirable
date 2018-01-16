@@ -90,6 +90,7 @@ def process_event(helper, *args, **kwargs):
                     existing_issue_unique_id_value = getattr(existing_issue.fields, unique_customfield_id)
                     if existing_issue_unique_id_value == templated_unique_id_value:
                         issue = existing_issue
+                        jira_action = "append"
                 except:
                     # it's fine if the custom field doesn't exist, because we're not sure if the events that matched have the field
                     pass
@@ -97,6 +98,7 @@ def process_event(helper, *args, **kwargs):
         # issue = False if not asked to dedup or if no matching dedup issue was found
         if not issue:
             issue = jira.create_issue(fields=issue_fields)
+            jira_action = "create"
 
             dynamic_field_regex = re.compile(r"^" + dynamic_field_prefix + "(?P<dynamic_field_name>.*)$")
             for field in event:
@@ -123,6 +125,7 @@ def process_event(helper, *args, **kwargs):
                 "search_et": helper.info.get('_search_et', 0),
                 # if no _search_lt, use the time of the search
                 "search_lt": helper.info.get('_search_lt', helper.info.get('_timestamp')),
+                "jira_action": jira_action,
             })
         )
 
