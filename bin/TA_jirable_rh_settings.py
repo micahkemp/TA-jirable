@@ -46,7 +46,7 @@ fields_additional_parameters = [
     ), 
     field.RestField(
         'unique_id_field_name',
-        required=True,
+        required=False,
         encrypted=False,
         default='',
         validator=validator.String(
