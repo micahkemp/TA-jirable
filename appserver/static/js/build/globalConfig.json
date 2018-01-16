@@ -1,14 +1,35 @@
 {
+    "meta": {
+        "version": "1.0.0", 
+        "apiVersion": "3.0.0", 
+        "restRoot": "TA_jirable", 
+        "displayName": "JIRAble", 
+        "name": "TA-jirable"
+    }, 
     "pages": {
         "configuration": {
             "tabs": [
                 {
                     "entity": [
                         {
+                            "defaultValue": "", 
+                            "field": "jira_url", 
+                            "validators": [
+                                {
+                                    "errorMsg": "Max length of text input is 8192", 
+                                    "minLength": 0, 
+                                    "maxLength": 8192, 
+                                    "type": "string"
+                                }
+                            ], 
+                            "help": "", 
                             "required": true, 
                             "label": "JIRA URL", 
-                            "field": "jira_url", 
+                            "type": "text"
+                        }, 
+                        {
                             "defaultValue": "", 
+                            "field": "username", 
                             "validators": [
                                 {
                                     "errorMsg": "Max length of text input is 8192", 
@@ -17,31 +38,14 @@
                                     "type": "string"
                                 }
                             ], 
-                            "type": "text", 
-                            "help": ""
-                        }, 
-                        {
+                            "help": "", 
                             "required": true, 
                             "label": "Username", 
-                            "field": "username", 
-                            "defaultValue": "", 
-                            "validators": [
-                                {
-                                    "errorMsg": "Max length of text input is 8192", 
-                                    "minLength": 0, 
-                                    "maxLength": 8192, 
-                                    "type": "string"
-                                }
-                            ], 
-                            "type": "text", 
-                            "help": ""
+                            "type": "text"
                         }, 
                         {
-                            "encrypted": true, 
-                            "required": true, 
-                            "label": "Password", 
-                            "field": "password", 
                             "defaultValue": "", 
+                            "field": "password", 
                             "validators": [
                                 {
                                     "errorMsg": "Max length of password is 8192", 
@@ -50,30 +54,31 @@
                                     "type": "string"
                                 }
                             ], 
-                            "type": "text", 
-                            "help": ""
+                            "help": "", 
+                            "required": true, 
+                            "encrypted": true, 
+                            "label": "Password", 
+                            "type": "text"
                         }, 
                         {
+                            "defaultValue": "", 
+                            "field": "unique_id_field_name", 
+                            "validators": [
+                                {
+                                    "errorMsg": "Max length of text input is 8192", 
+                                    "minLength": 0, 
+                                    "maxLength": 8192, 
+                                    "type": "string"
+                                }
+                            ], 
+                            "help": "Used to skip issue creation if one already exists based on Unique ID Value", 
                             "required": false, 
                             "label": "Unique ID Field Name", 
-                            "field": "unique_id_field_name", 
-                            "defaultValue": "", 
-                            "validators": [
-                                {
-                                    "errorMsg": "Max length of text input is 8192", 
-                                    "minLength": 0, 
-                                    "maxLength": 8192, 
-                                    "type": "string"
-                                }
-                            ], 
-                            "type": "text", 
-                            "help": "Used to skip issue creation if one already exists based on Unique ID Value"
+                            "type": "text"
                         }, 
                         {
-                            "required": false, 
-                            "label": "Dynamic Field Prefix", 
-                            "field": "dynamic_field_prefix", 
                             "defaultValue": "jira_dynamic_field_", 
+                            "field": "dynamic_field_prefix", 
                             "validators": [
                                 {
                                     "errorMsg": "Max length of text input is 8192", 
@@ -82,23 +87,18 @@
                                     "type": "string"
                                 }
                             ], 
-                            "type": "text", 
-                            "help": "Fields passed to this alert with the given prefix will be attempted to be set in the issue"
+                            "help": "Fields passed to this alert with the given prefix will be attempted to be set in the issue", 
+                            "required": false, 
+                            "label": "Dynamic Field Prefix", 
+                            "type": "text"
                         }
                     ], 
-                    "name": "additional_parameters", 
-                    "title": "Add-on Settings"
+                    "title": "Add-on Settings", 
+                    "name": "additional_parameters"
                 }
             ], 
-            "description": "Set up your add-on", 
-            "title": "Configuration"
+            "title": "Configuration", 
+            "description": "Set up your add-on"
         }
-    }, 
-    "meta": {
-        "apiVersion": "3.0.0", 
-        "version": "1.0.0", 
-        "name": "TA-jirable", 
-        "restRoot": "TA_jirable", 
-        "displayName": "JIRAble"
     }
 }

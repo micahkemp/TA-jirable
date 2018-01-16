@@ -35,6 +35,9 @@ def process_event(helper, *args, **kwargs):
     project = helper.get_param("project")
     helper.log_info("project={}".format(project))
 
+    drilldown_dashboard = helper.get_param("drilldown_dashboard")
+    helper.log_info("drilldown_dashboard={}".format(drilldown_dashboard))
+
     unique_id_value = helper.get_param("unique_id_value")
     helper.log_info("unique_id_value={}".format(unique_id_value))
 
@@ -126,6 +129,7 @@ def process_event(helper, *args, **kwargs):
                 # if no _search_lt, use the time of the search
                 "search_lt": helper.info.get('_search_lt', helper.info.get('_timestamp')),
                 "jira_action": jira_action,
+                "drilldown_dashboard": drilldown_dashboard,
             })
         )
 
