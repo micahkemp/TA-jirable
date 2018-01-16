@@ -1,0 +1,39 @@
+<dashboard>
+  <label>JIRAbles</label>
+  <row>
+    <panel>
+      <title>Open JIRAbles</title>
+      <table>
+        <search>
+          <query>| jirasearch query="project=PROJ AND status!=Done AND status!=Resolved"
+| lookup jirables jira_key AS key
+| eval count=mvcount(_key), sorted_alert_times=mvsort(alert_time), drilldown_dashboard=mvindex(drilldown_dashboard, 0)
+| eval earliest_alert_time=mvindex(sorted_alert_times, 0), latest_alert_time=mvindex(sorted_alert_times, -1)
+| table key Summary count earliest_alert_time latest_alert_time drilldown_dashboard
+| convert ctime(earliest_alert_time) ctime(latest_alert_time)</query>
+          <earliest>0</earliest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <fields>key Summary count earliest_alert_time latest_alert_time</fields>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <drilldown>
+          <condition field="Summary">
+            <link target="_blank">/app/TA-jirable/$row.drilldown_dashboard$?jira_key=$row.key$</link>
+          </condition>
+          <condition field="key">
+            <link target="_blank">http://192.168.82.145:8080/browse/$row.key$</link>
+          </condition>
+          <condition field="*">
+            <set token="dummy">drilldown disabled on this column</set>
+          </condition>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</dashboard>
