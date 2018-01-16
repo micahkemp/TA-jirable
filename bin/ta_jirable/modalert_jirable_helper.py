@@ -3,9 +3,16 @@
 from jira import JIRA
 from mako.template import Template
 import re
+import splunklib.client as client
+import json
+from datetime import datetime
 
 def process_event(helper, *args, **kwargs):
     helper.log_info("Alert action jirable started.")
+
+    # addinfo adds _search_et, _search_lt, _timestamp to helper.info
+    # we use these fields for the kvstore, so grab them up here (just once)
+    helper.addinfo()
 
     # jirable.py checks for the presence of these mandatory settings, so don't bother doing so here
     jira_url = helper.get_global_setting("jira_url")
@@ -66,8 +73,8 @@ def process_event(helper, *args, **kwargs):
             'summary': templated_summary,
         }
 
-        # a new issue will be created if matched remains False
-        matched = False
+        # a new issue will be created if issue remains False
+        issue = False
 
         # don't bother searching unless configured to dedup
         if dedup_by_unique_id_value=="yes":
@@ -82,13 +89,13 @@ def process_event(helper, *args, **kwargs):
                     # this is apparently how you do something like existing_issue.$unique_customfield_id
                     existing_issue_unique_id_value = getattr(existing_issue.fields, unique_customfield_id)
                     if existing_issue_unique_id_value == templated_unique_id_value:
-                        matched = True
+                        issue = existing_issue
                 except:
                     # it's fine if the custom field doesn't exist, because we're not sure if the events that matched have the field
                     pass
 
-        # matched = False if not asked to dedup or if no matching dedup issue was found
-        if not matched:
+        # issue = False if not asked to dedup or if no matching dedup issue was found
+        if not issue:
             issue = jira.create_issue(fields=issue_fields)
 
             dynamic_field_regex = re.compile(r"^" + dynamic_field_prefix + "(?P<dynamic_field_name>.*)$")
@@ -100,5 +107,23 @@ def process_event(helper, *args, **kwargs):
                     except:
                         # in case a dynamic field was improperly named, etc, don't bail out, just log it
                         helper.log_info("Unable to set field: {}".format(match.group('dynamic_field_name')))
+
+        # new or existing issue, we continue processing to add to the kvstore
+        session_key = helper.session_key
+
+        # need to set owner="nobody" to use kvstore
+        service = client.connect(owner="nobody", token=session_key)
+        jirables_collection = service.kvstore['jirables']
+        jirables_collection.data.insert(
+            json.dumps({
+                "jira_key": issue.key,
+                # _timestamp is the time the search was run
+                "alert_time": helper.info.get('_timestamp'),
+                # if no _search_et, use start of time (0)
+                "search_et": helper.info.get('_search_et', 0),
+                # if no _search_lt, use the time of the search
+                "search_lt": helper.info.get('_search_lt', helper.info.get('_timestamp')),
+            })
+        )
 
     return 0
