@@ -27,8 +27,8 @@
 	<label class="control-label" for="jirable_dedup_by_unique_id_value">Dedup by Unique ID Value <span class="required">*</span> </label>
     <div class="controls">
 <select name="action.jirable.param.dedup_by_unique_id_value" id="jirable_dedup_by_unique_id_value">
-        <option value="yes">Yes</option>
         <option value="no">No</option>
+        <option value="yes">Yes</option>
 </select>
                 <span class="help-block"> 
                     If set to Yes, Unique ID Field Name must be defined in global settings
@@ -42,6 +42,12 @@
                 <span class="help-block"> 
                     Only used if Dedup by Unique ID Value is checked
                 </span>
+    </div>
+</div>
+<div class="control-group">
+	<label class="control-label" for="jirable_drilldown_search">Drilldown Search  </label>
+    <div class="controls">
+	<input type="text" name="action.jirable.param.drilldown_search" id="jirable_drilldown_search"/>
     </div>
 </div>
 </form>

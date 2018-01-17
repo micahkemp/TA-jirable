@@ -4,6 +4,7 @@ from jira import JIRA
 from mako.template import Template
 import re
 import splunklib.client as client
+import splunklib.results as results
 import json
 from datetime import datetime
 
@@ -50,6 +51,9 @@ def process_event(helper, *args, **kwargs):
     dedup_by_unique_id_value = helper.get_param("dedup_by_unique_id_value")
     helper.log_info("dedup_by_unique_id_value={}".format(dedup_by_unique_id_value))
 
+    drilldown_search = helper.get_param("drilldown_search")
+    helper.log_info("drilldown_search={}".format(drilldown_search))
+
     # quit if asked to dedup without the unique field name
     # note that "yes" is hardcoded, and this is the string that must be in savedsearches.conf
     # the use of 0, false, etc is not supported
@@ -75,6 +79,14 @@ def process_event(helper, *args, **kwargs):
             'issuetype': {'name': templated_issue_type},
             'summary': templated_summary,
         }
+
+        # we need search_et, search_lt, and alert_time in several of the below blocks
+        # _timestamp is the time the search was run
+        alert_time = helper.info.get('_timestamp')
+        # if no _search_et, use start of time (0)
+        search_et = helper.info.get('_search_et', 0)
+        # if no _search_lt, use the time of the search
+        search_lt = helper.info.get('_search_lt', alert_time)
 
         # a new issue will be created if issue remains False
         issue = False
@@ -113,6 +125,18 @@ def process_event(helper, *args, **kwargs):
                         # in case a dynamic field was improperly named, etc, don't bail out, just log it
                         helper.log_info("Unable to set field: {}".format(match.group('dynamic_field_name')))
 
+            # attach raw events if drilldown_search defined (only for new issues)
+            if drilldown_search:
+                session_key = helper.session_key
+                service = client.connect(token=session_key)
+                templated_drilldown_search = Template(drilldown_search).render(**event)
+                job = service.jobs.create(templated_drilldown_search, earliest_time=search_et, latest_time=search_lt, exec_mode="blocking")
+                raw_values = []
+                for result in results.ResultsReader(job.results()):
+                    raw_values.append(result['_raw'])
+                full_raw = "\n".join(raw_values)
+                jira.add_comment(issue, full_raw)
+
         # new or existing issue, we continue processing to add to the kvstore
         session_key = helper.session_key
 
@@ -122,12 +146,9 @@ def process_event(helper, *args, **kwargs):
         jirables_collection.data.insert(
             json.dumps({
                 "jira_key": issue.key,
-                # _timestamp is the time the search was run
-                "alert_time": helper.info.get('_timestamp'),
-                # if no _search_et, use start of time (0)
-                "search_et": helper.info.get('_search_et', 0),
-                # if no _search_lt, use the time of the search
-                "search_lt": helper.info.get('_search_lt', helper.info.get('_timestamp')),
+                "alert_time": alert_time,
+                "search_et": search_et,
+                "search_lt": search_lt,
                 "jira_action": jira_action,
                 "drilldown_dashboard": drilldown_dashboard,
             })
