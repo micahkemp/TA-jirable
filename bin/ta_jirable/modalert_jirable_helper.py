@@ -88,6 +88,10 @@ def process_event(helper, *args, **kwargs):
         # if no _search_lt, use the time of the search
         search_lt = helper.info.get('_search_lt', alert_time)
 
+        # templated_drilldown_search goes into kvstore even when not using it to create a new issue, so define prior to those blocks
+        # if not provided, it will be an empty string so no need to check for its presence first
+        templated_drilldown_search = Template(drilldown_search).render(**event)
+
         # a new issue will be created if issue remains False
         issue = False
 
@@ -129,7 +133,6 @@ def process_event(helper, *args, **kwargs):
             if drilldown_search:
                 session_key = helper.session_key
                 service = client.connect(token=session_key)
-                templated_drilldown_search = Template(drilldown_search).render(**event)
                 job = service.jobs.create(templated_drilldown_search, earliest_time=search_et, latest_time=search_lt, exec_mode="blocking")
                 raw_values = []
                 for result in results.ResultsReader(job.results()):
@@ -151,6 +154,7 @@ def process_event(helper, *args, **kwargs):
                 "search_lt": search_lt,
                 "jira_action": jira_action,
                 "drilldown_dashboard": drilldown_dashboard,
+                "drilldown_search": templated_drilldown_search,
             })
         )
 
