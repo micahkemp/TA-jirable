@@ -130,10 +130,18 @@ def process_event(helper, *args, **kwargs):
                         helper.log_info("Unable to set field: {}".format(match.group('dynamic_field_name')))
 
             # attach raw events if drilldown_search defined (only for new issues)
-            if drilldown_search:
+            if templated_drilldown_search:
                 session_key = helper.session_key
                 service = client.connect(token=session_key)
-                job = service.jobs.create(templated_drilldown_search, earliest_time=search_et, latest_time=search_lt, exec_mode="blocking")
+
+                # If the query doesn't already start with the 'search' operator or another 
+                # generating command (e.g. "| inputcsv"), then prepend "search " to it.
+                # But leave templated_drilldown_search alone, so it gets added to the kvstore as entered in the alert params
+                search_to_run = templated_drilldown_search
+                if not (search_to_run.startswith('search') or search_to_run.startswith("|")):
+                    search_to_run = 'search ' + search_to_run
+
+                job = service.jobs.create(search_to_run, earliest_time=search_et, latest_time=search_lt, exec_mode="blocking")
                 raw_values = []
                 for result in results.ResultsReader(job.results()):
                     raw_values.append(result['_raw'])
